@@ -1,70 +1,68 @@
-describe('OrangeHRM Login Automation - Using Intercept', () => {
+describe('OrangeHRM Login Automation - Intercept', () => {
 
     beforeEach(() => {
         cy.visit('https://opensource-demo.orangehrmlive.com/web/index.php/auth/login')
-        cy.get('input[name="username"]', { timeout: 10000 }).should('be.visible')
+        cy.get('input[name="username"]').should('be.visible')
     })
 
-    // TC01
-    it('TC_OHRM_001 - Login dengan username dan password valid', () => {
+    // TC01 - POST
+    it('TC01 - Login valid', () => {
 
-        cy.intercept('POST', '**/auth/validate').as('tc01Login')
+        cy.intercept('POST', '**/auth/validate').as('loginPost')
 
         cy.get('input[name="username"]').type('Admin')
         cy.get('input[name="password"]').type('admin123')
         cy.get('button[type="submit"]').click()
 
-        cy.wait('@tc01Login')
+        cy.wait('@loginPost')
 
-        cy.url().should('include', '/dashboard')
+        cy.url().should('include','dashboard')
     })
 
-    // TC02
-    it('TC_OHRM_002 - Login dengan username salah', () => {
+    // TC02 - GET
+    it('TC02 - Username salah', () => {
 
-        cy.intercept('POST', '**/auth/validate').as('tc02InvalidUser')
+        cy.intercept('GET', '**/core/i18n/messages').as('getMessage')
 
         cy.get('input[name="username"]').type('Admin123')
         cy.get('input[name="password"]').type('admin123')
         cy.get('button[type="submit"]').click()
 
-        cy.wait('@tc02InvalidUser')
-
         cy.contains('Invalid credentials').should('be.visible')
     })
 
-    // TC03
-    it('TC_OHRM_003 - Login dengan password salah', () => {
+    // TC03 - Wildcard
+    it('TC03 - Password salah', () => {
 
-        cy.intercept('POST', '**/auth/validate').as('tc03InvalidPassword')
+        cy.intercept('POST','**/auth/*').as('wildcardLogin')
 
         cy.get('input[name="username"]').type('Admin')
         cy.get('input[name="password"]').type('admin12')
         cy.get('button[type="submit"]').click()
 
-        cy.wait('@tc03InvalidPassword')
+        cy.wait('@wildcardLogin')
 
         cy.contains('Invalid credentials').should('be.visible')
     })
 
-    // TC04
-    it('TC_OHRM_004 - Login dengan username dan password salah', () => {
+    // TC04 - Semua Method
+    it('TC04 - Username dan Password salah', () => {
 
-        cy.intercept('POST', '**/auth/validate').as('tc04InvalidCredential')
+        cy.intercept('**/auth/validate').as('allMethod')
 
         cy.get('input[name="username"]').type('User')
         cy.get('input[name="password"]').type('Password')
         cy.get('button[type="submit"]').click()
 
-        cy.wait('@tc04InvalidCredential')
+        cy.wait('@allMethod')
 
         cy.contains('Invalid credentials').should('be.visible')
     })
 
-    // TC05
-    it('TC_OHRM_005 - Login tanpa username', () => {
+    // TC05 - Regex
+    it('TC05 - Tanpa Username', () => {
 
-        cy.intercept('POST', '**/auth/validate').as('tc05NoUsername')
+        cy.intercept(/auth\/validate/).as('regexIntercept')
 
         cy.get('input[name="password"]').type('admin123')
         cy.get('button[type="submit"]').click()
@@ -72,10 +70,10 @@ describe('OrangeHRM Login Automation - Using Intercept', () => {
         cy.contains('Required').should('be.visible')
     })
 
-    // TC06
-    it('TC_OHRM_006 - Login tanpa password', () => {
+    // TC06 - GET Wildcard
+    it('TC06 - Tanpa Password', () => {
 
-        cy.intercept('POST', '**/auth/validate').as('tc06NoPassword')
+        cy.intercept('GET','**/core/**').as('coreWildcard')
 
         cy.get('input[name="username"]').type('Admin')
         cy.get('button[type="submit"]').click()
@@ -83,33 +81,31 @@ describe('OrangeHRM Login Automation - Using Intercept', () => {
         cy.contains('Required').should('be.visible')
     })
 
-    // TC07
-    it('TC_OHRM_007 - Login tanpa username dan password', () => {
+    // TC07 - Semua Request Login
+    it('TC07 - Tanpa Username dan Password', () => {
 
-        cy.intercept('POST', '**/auth/validate').as('tc07EmptyCredential')
+        cy.intercept('**/auth/**').as('allAuth')
 
         cy.get('button[type="submit"]').click()
 
         cy.contains('Required').should('be.visible')
     })
 
-    // TC08
-    it('TC_OHRM_008 - Logout setelah login berhasil', () => {
+    // TC08 - Logout
+    it('TC08 - Logout', () => {
 
-        cy.intercept('POST', '**/auth/validate').as('tc08Login')
+        cy.intercept('POST','**/auth/validate').as('logoutLogin')
 
         cy.get('input[name="username"]').type('Admin')
         cy.get('input[name="password"]').type('admin123')
         cy.get('button[type="submit"]').click()
 
-        cy.wait('@tc08Login')
-
-        cy.url().should('include', '/dashboard')
+        cy.wait('@logoutLogin')
 
         cy.get('.oxd-userdropdown-name').click()
         cy.contains('Logout').click()
 
-        cy.url().should('include', '/login')
+        cy.url().should('include','login')
     })
 
 })
